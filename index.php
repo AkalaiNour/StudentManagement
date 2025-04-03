@@ -22,13 +22,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $age = $_POST['age'];
     $filiere = $_POST['filiere'];
 
-    // SQL query to insert data into the "etudiants" table
-    $sql = "INSERT INTO etudiants (nom, prenom, email, age, filiere) VALUES ('$nom', '$prenom', '$email', '$age', '$filiere')";
+    // Check if the email already exists
+    $checkEmailSql = "SELECT * FROM etudiants WHERE email='$email'";
+    $checkEmailResult = $conn->query($checkEmailSql);
 
-    if ($conn->query($sql) === TRUE) {
-        echo "<p>Student added successfully!</p>";
+    if ($checkEmailResult->num_rows > 0) {
+        echo "<p style='color: red;'>Error: A student with this email already exists.</p>";
     } else {
-        echo "<p>Error: " . $sql . "<br>" . $conn->error . "</p>";
+        // SQL query to insert data into the "etudiants" table
+        $sql = "INSERT INTO etudiants (nom, prenom, email, age, filiere) VALUES ('$nom', '$prenom', '$email', '$age', '$filiere')";
+
+        if ($conn->query($sql) === TRUE) {
+            echo "<p style='color: green;'>Student added successfully!</p>";
+        } else {
+            echo "<p style='color: red;'>Error: " . $sql . "<br>" . $conn->error . "</p>";
+        }
     }
 }
 
@@ -44,6 +52,7 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Management</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Font Awesome -->
 </head>
 <body>
     <div class="container">
@@ -87,6 +96,7 @@ $result = $conn->query($sql);
                     <th>Age</th>
                     <th>Filière</th>
                     <th>Date de création</th>
+                    <th>Actions</th> <!-- New column for actions -->
                 </tr>
             </thead>
             <tbody>
@@ -102,10 +112,14 @@ $result = $conn->query($sql);
                                 <td>" . $row["age"] . "</td>
                                 <td>" . $row["filiere"] . "</td>
                                 <td>" . $row["date_creation"] . "</td>
+                                <td>
+                                    <a href='edit.php?id=" . $row["id"] . "' title='Edit'><i class='fas fa-edit'></i></a> |
+                                    <a href='delete.php?id=" . $row["id"] . "' title='Delete' onclick='return confirm(\"Are you sure you want to delete this student?\")'><i class='fas fa-trash-alt'></i></a>
+                                </td>
                             </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='7'>No students found</td></tr>";
+                    echo "<tr><td colspan='8'>No students found</td></tr>";
                 }
                 ?>
             </tbody>
